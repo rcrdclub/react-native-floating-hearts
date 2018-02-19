@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Animated, StyleSheet, ViewPropTypes } from 'react-native'
+import { View, Animated, StyleSheet, ViewPropTypes, Easing } from 'react-native'
 import { PropTypes } from 'prop-types';
 import HeartShape from './HeartShape'
 
@@ -17,6 +17,7 @@ class FloatingHearts extends Component {
     return {
       id: index,
       right: getRandomNumber(this.props.rightMin?this.props.rightMin:50, this.props.rightMax?this.props.rightMax:150),
+      shrinkTo: this.props.shrinkTo,
     }
   }
 
@@ -58,8 +59,8 @@ class FloatingHearts extends Component {
     return (
       <View style={[styles.container, this.props.style]} onLayout={this.handleOnLayout} pointerEvents="none">
         {isReady &&
-          this.state.hearts.map(({ id, right }) =>
-            <AnimatedShape key={id} height={height} style={{ right }} onComplete={this.removeHeart.bind(this, id)}>
+          this.state.hearts.map(({ id, right, shrinkTo }) =>
+            <AnimatedShape key={id} height={height} style={{ right }} shrinkTo={shrinkTo} onComplete={this.removeHeart.bind(this, id)}>
               {renderCustomShape ? renderCustomShape(id) : <HeartShape {...heartProps} />}
             </AnimatedShape>
           )}
@@ -72,6 +73,9 @@ FloatingHearts.propTypes = {
   style: ViewPropTypes.style,
   count: PropTypes.number,
   color: PropTypes.string,
+  rightMin: PropTypes.number,
+  rightMax: PropTypes.number,
+  shrinkTo: PropTypes.number,
   renderCustomShape: PropTypes.func,
 }
 
@@ -97,7 +101,7 @@ class AnimatedShape extends Component {
 
   componentDidMount() {
     Animated.timing(this.state.position, {
-      duration: 2000,
+      duration: 3000,
       useNativeDriver: true,
       toValue: this.props.height * -1,
     }).start(this.props.onComplete)
@@ -137,24 +141,24 @@ class AnimatedShape extends Component {
 
     this.opacityAnimation = this.yAnimation.interpolate({
       inputRange: [0, height - shapeHeight],
-      outputRange: [1, 0],
+      outputRange: [1, 0.1],
     })
 
     this.scaleAnimation = this.yAnimation.interpolate({
-      inputRange: [0, 15, 30, height],
-      outputRange: [0, 1.2, 1, this.props.shrinkTo?this.props.shrinkTo:1],
+      inputRange: [0, 15, 25, height],
+      outputRange: [0, 1.4, 1, this.props.shrinkTo?this.props.shrinkTo:1],
     })
 
     this.xAnimation = this.yAnimation.interpolate({
-      inputRange: [0, height / 2, height],
-      outputRange: [0, 15, 0],
+      inputRange: [0, height * .25, height * .75, height],
+      outputRange: [0, getRandomNumber(0, 20), getRandomNumber(0, -20), getRandomNumber(0, -20)],
     })
 
     this.rotateAnimation = this.yAnimation.interpolate({
-      inputRange: [0, height / 4, height / 3, height / 2, height],
+      inputRange: [0, height * .25, height * .5, height * .75, height],
       outputRange: ['0deg', '-2deg', '0deg', '2deg', '0deg'],
     })
-
+    console.log(this.props.shrinkTo)
     setTimeout(() => this.setState({ animationsReady: true }), 16)
   }
 
@@ -197,7 +201,6 @@ const styles = StyleSheet.create({
   shapeWrapper: {
     position: 'absolute',
     bottom: 0,
-    backgroundColor: 'transparent',
   },
 })
 
