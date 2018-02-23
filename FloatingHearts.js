@@ -48,7 +48,7 @@ class FloatingHearts extends Component {
 
   render() {
     const { height } = this.state
-    const { color, renderCustomShape, timing } = this.props
+    const { color, renderCustomShape, timing, delay } = this.props
     const isReady = height !== null
 
     let heartProps = {}
@@ -59,8 +59,8 @@ class FloatingHearts extends Component {
     return (
       <View style={[styles.container, this.props.style]} onLayout={this.handleOnLayout} pointerEvents="none">
         {isReady &&
-          this.state.hearts.map(({ id, right, shrinkTo }) =>
-            <AnimatedShape key={id} timing={timing} height={height} style={{ right }} shrinkTo={shrinkTo} onComplete={this.removeHeart.bind(this, id)}>
+          this.state.hearts.map(({ id, right, shrinkTo }, index) =>
+            <AnimatedShape key={id} timing={timing} delay={delay*index} height={height} style={{ right }} shrinkTo={shrinkTo} onComplete={this.removeHeart.bind(this, id)}>
               {renderCustomShape ? renderCustomShape(id) : <HeartShape {...heartProps} />}
             </AnimatedShape>
           )}
@@ -74,6 +74,7 @@ FloatingHearts.propTypes = {
   count: PropTypes.number,
   color: PropTypes.string,
   timing: PropTypes.number,
+  delay: PropTypes.number,
   rightMin: PropTypes.number,
   rightMax: PropTypes.number,
   shrinkTo: PropTypes.number,
@@ -83,6 +84,7 @@ FloatingHearts.propTypes = {
 FloatingHearts.defaultProps = {
   count: -1,
   timing: 2000,
+  delay: 0,
 }
 
 /**
@@ -107,6 +109,7 @@ class AnimatedShape extends Component {
       duration: this.props.timing,
       useNativeDriver: true,
       toValue: this.props.height * -1,
+      delay: this.props.delay,
     }).start(this.props.onComplete)
   }
 
@@ -179,12 +182,14 @@ class AnimatedShape extends Component {
 AnimatedShape.propTypes = {
   height: PropTypes.number.isRequired,
   timing: PropTypes.number.isRequired,
+  delay: PropTypes.number,
   onComplete: PropTypes.func.isRequired,
   style: ViewPropTypes.style,
   children: PropTypes.node.isRequired,
 }
 
 AnimatedShape.defaultProps = {
+  delay: 0,
   onComplete: () => {},
 }
 
