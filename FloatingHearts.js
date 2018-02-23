@@ -48,7 +48,7 @@ class FloatingHearts extends Component {
 
   render() {
     const { height } = this.state
-    const { color, renderCustomShape } = this.props
+    const { color, renderCustomShape, timing } = this.props
     const isReady = height !== null
 
     let heartProps = {}
@@ -60,7 +60,7 @@ class FloatingHearts extends Component {
       <View style={[styles.container, this.props.style]} onLayout={this.handleOnLayout} pointerEvents="none">
         {isReady &&
           this.state.hearts.map(({ id, right, shrinkTo }) =>
-            <AnimatedShape key={id} height={height} style={{ right }} shrinkTo={shrinkTo} onComplete={this.removeHeart.bind(this, id)}>
+            <AnimatedShape key={id} timing={timing} height={height} style={{ right }} shrinkTo={shrinkTo} onComplete={this.removeHeart.bind(this, id)}>
               {renderCustomShape ? renderCustomShape(id) : <HeartShape {...heartProps} />}
             </AnimatedShape>
           )}
@@ -73,6 +73,7 @@ FloatingHearts.propTypes = {
   style: ViewPropTypes.style,
   count: PropTypes.number,
   color: PropTypes.string,
+  timing: PropTypes.number,
   rightMin: PropTypes.number,
   rightMax: PropTypes.number,
   shrinkTo: PropTypes.number,
@@ -81,6 +82,7 @@ FloatingHearts.propTypes = {
 
 FloatingHearts.defaultProps = {
   count: -1,
+  timing: 2000,
 }
 
 /**
@@ -96,12 +98,13 @@ class AnimatedShape extends Component {
       shapeHeight: null,
       enabled: false,
       animationsReady: false,
+      children: props.children,
     }
   }
 
   componentDidMount() {
     Animated.timing(this.state.position, {
-      duration: 3000,
+      duration: this.props.timing,
       useNativeDriver: true,
       toValue: this.props.height * -1,
     }).start(this.props.onComplete)
@@ -158,7 +161,6 @@ class AnimatedShape extends Component {
       inputRange: [0, height * .25, height * .5, height * .75, height],
       outputRange: ['0deg', '-2deg', '0deg', '2deg', '0deg'],
     })
-    console.log(this.props.shrinkTo)
     setTimeout(() => this.setState({ animationsReady: true }), 16)
   }
 
@@ -168,7 +170,7 @@ class AnimatedShape extends Component {
         style={[styles.shapeWrapper, this.getAnimationStyle(), this.props.style]}
         onLayout={this.handleOnLayout}
       >
-        {this.props.children}
+        {this.state.children}
       </Animated.View>
     )
   }
@@ -176,6 +178,7 @@ class AnimatedShape extends Component {
 
 AnimatedShape.propTypes = {
   height: PropTypes.number.isRequired,
+  timing: PropTypes.number.isRequired,
   onComplete: PropTypes.func.isRequired,
   style: ViewPropTypes.style,
   children: PropTypes.node.isRequired,
